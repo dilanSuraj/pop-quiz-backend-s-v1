@@ -1,9 +1,0 @@
-{
-    "apps": [
-        {
-            "name": "regov-api",
-            "script": "npm",
-            "args" : "run start:dev"
-        }
-    ]
-}
