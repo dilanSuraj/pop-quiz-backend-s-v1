@@ -1,0 +1,25 @@
+server:
+    port: 8007
+    hostedDomain: ''
+
+db:
+    type: 'mysql'
+    port: 25060
+    database: 'regov-db'
+    host: ''
+    username: 'doadmin'
+    password: 'root'
+    connectionAlive: false
+    migrations: ['dist/migrations/*{.ts,.js}']
+    migrationsTableName: 'migrations_typeorm'
+    migrationsRun: true
+
+jwt:
+    secret: 'RTgDdy7AaMSEuHCP7rEc9jm4e6BsDhrEbjVYffWPk6nuxNzA5Cf5R68w'
+
+logger:
+    logToFile: true
+    logFile: 'ReGov-API-%DATE%.log'
+    logDirectory: 'logs'
+    maxSize: '20m'
+    maxFiles: '60d'

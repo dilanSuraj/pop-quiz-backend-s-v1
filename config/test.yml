@@ -1,0 +1,16 @@
+db:
+    type: 'mysql'
+    port: 3306
+    host: ''
+    database: 'regov-test'
+    username: 'root'
+    password: ''
+    synchronize: false
+    logging: false
+    connectionAlive: true
+
+jwt:
+    secret: 'secretKey'
+
+logger:
+    logToFile: false

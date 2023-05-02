@@ -1,0 +1,25 @@
+server:
+    port: 7007
+    hostedDomain: ''
+
+db:
+    type: 'mysql'
+    port: 3306
+    database: 'regov-staging'
+    host: ''
+    username: ''
+    password: ''
+    connectionAlive: false
+    migrations: ['dist/migrations/*{.ts,.js}']
+    migrationsTableName: 'migrations_typeorm'
+    migrationsRun: true
+
+jwt:
+    secret: 'RTgDdy7AaMSEuHCP7rEc9jm4e6BsDhrEbjVYffWPk6nuxNzA5Cf5R68w'
+
+logger:
+    logToFile: true
+    logFile: 'ReGov-stage-API-%DATE%.log'
+    logDirectory: 'logs'
+    maxSize: '10m'
+    maxFiles: '30d'

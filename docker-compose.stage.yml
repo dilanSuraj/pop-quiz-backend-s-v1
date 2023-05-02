@@ -1,0 +1,11 @@
+version: '3'
+services:
+    hash_generation_backend_stage:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                - NODE_ENV=stage
+        restart: on-failure
+        ports:
+            - '7011:7007'
