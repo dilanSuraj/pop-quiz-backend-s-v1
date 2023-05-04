@@ -12,7 +12,11 @@ export class Enrollment {
 
     @ApiProperty({ enum: EnrollmentStatus, enumName: 'EnrollmentStatus' })
     @Column({ default: EnrollmentStatus.REGISTERED })
-    status: EnrollmentStatus;
+    enrollmentStatus: EnrollmentStatus;
+
+    @ApiProperty()
+    @Column()
+    courseKey: string;
 
     @ApiProperty({ type: () => Student })
     @ManyToOne(() => Student, (student) => student.enrollments)

@@ -1,6 +1,6 @@
 import { Controller, Post, UsePipes, Body, UseGuards, Delete, Get, Query, ValidationPipe, Param } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiOkResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { GetUser } from 'src/common/decorators/get-user.decorator';
+import { GetStudent } from 'src/common/decorators/get-student.decorator';
 import { ClassValidationPipe } from 'src/common/pipes/class-validation.pipe';
 import { AdminJwtAuthGuard } from '../admin-auth/admin-jwt-auth.guard';
 import { AdminResetPasswordDto } from '../admin-auth/dto/admin-reset-password.dto';
@@ -45,7 +45,7 @@ export class AdminAdminsController {
     })
     @UseGuards(AdminJwtAuthGuard)
     @UsePipes(ClassValidationPipe)
-    getMyProfile(@GetUser() admin: ReqAdminInfo): Promise<Admin> {
+    getMyProfile(@GetStudent() admin: ReqAdminInfo): Promise<Admin> {
         return this.adminAdminsService.getAdminById(admin.userId);
     }
 
@@ -77,7 +77,7 @@ export class AdminAdminsController {
     @UseGuards(AdminJwtAuthGuard)
     @UsePipes(ClassValidationPipe)
     resetMyPassword(
-        @GetUser() admin: ReqAdminInfo,
+        @GetStudent() admin: ReqAdminInfo,
         @Body() adminResetPasswordDto: AdminResetPasswordDto,
     ): Promise<void> {
         return this.adminAdminsService.resetMyPassword(

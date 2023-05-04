@@ -1,4 +1,4 @@
 export interface ReqStudentInfo {
-    userId: string;
+    studentId: string;
     email: string;
 }
