@@ -127,7 +127,7 @@ export class AdminCoursesService {
                 delete adminUpdateCourseDto.key;
             }
 
-            if (adminUpdateCourseDto?.maxEnrollmentCapacity) {
+            if (adminUpdateCourseDto?.maxEnrollmentCapacity >= 0) {
                 const currentEnrollmentCount = await this.adminEnrollmentsService.getAllRegisteredEnrollmentCount(courseId, manager);
                 if (currentEnrollmentCount > adminUpdateCourseDto?.maxEnrollmentCapacity) {
                     throw new BadRequestException(ResponseMessageEnums.MAX_ENROLLMENT_COUNT_CANNOT_BE_REDUCED);
