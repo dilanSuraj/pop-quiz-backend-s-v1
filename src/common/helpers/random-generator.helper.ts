@@ -5,11 +5,11 @@ import { userConfig } from 'src/config/user-config';
 
 export const generateStudentId = (): string => randomize('0', userConfig.idLength);
 
-export const generateCourseId = (): string => randomize('C', courseConfig.courseIdLength);
+export const generateCourseId = (): string => 'C' + randomize('0', courseConfig.courseIdLength);
 
-export const generateEnrollmentId = (): string => randomize('E', enrollmentConfig.idLength);
+export const generateEnrollmentId = (): string => 'E' + randomize('0', enrollmentConfig.idLength);
 
-export const generateAdminId = (): string => randomize('AD', userConfig.idLength);
+export const generateAdminId = (): string => 'AD' + randomize('0', userConfig.idLength);
 
 export const generateRandomNumberString = (length: number): string => randomize('0', length);
 

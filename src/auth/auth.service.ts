@@ -66,13 +66,24 @@ export class AuthService {
     }
 
     async signUp(email: string, name: string, password: string): Promise<LoginResponseDto> {
+        const alreadyExistStudent = await this.studentService.findOne(email);
+
+        if (alreadyExistStudent && alreadyExistStudent?.status === StudentStatus.DEACTIVATED) {
+            throw new BadRequestException(ResponseMessageEnums.USER_DEACTIVATED);
+        }
+        else if (alreadyExistStudent && alreadyExistStudent?.status === StudentStatus.ACTIVATED) {
+            throw new BadRequestException(ResponseMessageEnums.USER_ALREADY_EXISTS);
+        }
+
         const student = new Student();
 
         student.email = email;
         student.name = name;
-        student.password = password;
-        student.salt = await generateSalt();
+        const salt = await generateSalt();
         student.studentId = generateStudentId();
+
+        student.password = await hashPassword(password, salt);
+        student.salt = salt;
 
         const savedStudent = await this.studentService.create(student);
 

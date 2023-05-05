@@ -10,6 +10,11 @@ export class AdminCreateAdminDto {
     @ApiProperty()
     @IsNotEmpty()
     @IsString()
+    name: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @IsString()
     @MinLength(5)
     password: string;
 }

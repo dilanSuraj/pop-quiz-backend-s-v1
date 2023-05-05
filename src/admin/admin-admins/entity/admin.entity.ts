@@ -13,6 +13,10 @@ export class Admin {
     @Column({ default: null, nullable: true })
     username: string;
 
+    @ApiProperty()
+    @Column({ default: null, nullable: true })
+    name: string;
+
     @Column({ default: null, nullable: true, select: false })
     password?: string;
 

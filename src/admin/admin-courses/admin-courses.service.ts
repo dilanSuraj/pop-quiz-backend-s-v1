@@ -112,7 +112,7 @@ export class AdminCoursesService {
 
             const adminUser = await this.adminAdminsService.getAdminById(adminUserId, manager);
             course = await manager.findOne(Course, courseId, {
-                relations: ['createdBy'],
+                relations: ['manageBy'],
             });
 
             if (!course) {

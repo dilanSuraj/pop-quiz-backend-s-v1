@@ -12,7 +12,7 @@ export const SERVICE_ID_LENGTH = 15;
 
 @Injectable()
 export class CourseService {
-    constructor(private connection: Connection, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {}
+    constructor(private connection: Connection,  @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {}
 
     async getAll(skip?: number, take?: number, courseName?: string, entityManager?: EntityManager): Promise<GetAvailableCoursesResponseDto> {
 

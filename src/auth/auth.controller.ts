@@ -20,7 +20,7 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @UsePipes(ClassValidationPipe)
     localLogin(@Body() loginDto: LoginDto, @Req() req: any): Promise<LoginResponseDto> {
-        return this.authService.login(req.student, loginDto.email);
+        return this.authService.login(req.user, loginDto.email);
     }
 
     @Post('signup')

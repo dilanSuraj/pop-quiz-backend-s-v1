@@ -66,7 +66,13 @@ export class EnrollmentService {
         }
 
         const dto = new GetAllEnrollmentsByStudentResponseDto();
-        dto.enrollments = await query.getMany();
+
+        const enrollments = await query.getMany();
+
+        dto.enrollments = enrollments.map((enrollment) => {
+            delete enrollment.student;
+            return enrollment;
+        });
 
         return dto;
     }
@@ -111,11 +117,23 @@ export class EnrollmentService {
             })
             .getCount();
 
-        return maxEnrollmentCount > registeredEnrollmentCount;
+        return (maxEnrollmentCount > registeredEnrollmentCount);
     }
 
-    async addEnrollment(studentId: string, courseId: string, entityManager?: EntityManager): Promise<Enrollment> {
+    async courseEnrollment(studentId: string, courseId: string, entityManager?: EntityManager): Promise<Enrollment> {
         const manager = entityManager || this.connection.manager;
+
+        const course = await this.courseService.getCourseById(courseId, manager);
+
+        const isAvailableForNewEnrollments = await this.checkIfNewEnrollmentsAvailable(
+            courseId,
+            course?.maxEnrollmentCapacity,
+            manager,
+        );
+
+        if (!isAvailableForNewEnrollments) {
+            throw new BadRequestException(ResponseMessageEnums.ENROLLMENTS_MAX_COUNT_REACHED);
+        }
 
         const enrollment = await manager
             .getRepository(Enrollment)
@@ -130,32 +148,44 @@ export class EnrollmentService {
             throw new BadRequestException(ResponseMessageEnums.ENROLLMENT_ALREADY_EXISTS);
         }
 
-        const isAvailableForNewEnrollments = this.checkIfNewEnrollmentsAvailable(
-            courseId,
-            enrollment?.course?.maxEnrollmentCapacity,
-            manager,
-        );
-
-        if (!isAvailableForNewEnrollments) {
-            throw new BadRequestException(ResponseMessageEnums.ENROLLMENTS_MAX_COUNT_REACHED);
-        }
-
         if (enrollment?.enrollmentStatus === EnrollmentStatus.UNREGISTERED) {
             enrollment.enrollmentStatus = EnrollmentStatus.REGISTERED;
             return await this.connection.manager.save(enrollment);
         }
 
         const newEnrollment = new Enrollment();
-        const course = await this.courseService.getCourseById(courseId);
 
         newEnrollment.course = course;
         newEnrollment.courseKey = course.key;
         newEnrollment.enrollmentId = generateEnrollmentId();
         newEnrollment.enrollmentStatus = EnrollmentStatus.REGISTERED;
 
-        const student = await this.studentService.findById(studentId);
-        newEnrollment.student =student;
+        const student = await this.studentService.findBasicStudentDetails(studentId);
+        newEnrollment.student = student;
 
         return await manager.save(newEnrollment);
+    }
+
+    async courseUnregister(studentId: string, courseId: string, entityManager?: EntityManager): Promise<void> {
+        const manager = entityManager || this.connection.manager;
+
+        const enrollment = await manager
+            .getRepository(Enrollment)
+            .createQueryBuilder('enrollment')
+            .leftJoinAndSelect('enrollment.course', 'course')
+            .leftJoinAndSelect('enrollment.student', 'student')
+            .where('course.courseId = :courseId', { courseId })
+            .andWhere('student.studentId = :studentId', { studentId })
+            .andWhere('enrollment.enrollmentStatus = :enrollmentStatus', {
+                enrollmentStatus: EnrollmentStatus.REGISTERED,
+            })
+            .getOne();
+
+        if (!enrollment) {
+            throw new BadRequestException(ResponseMessageEnums.NOT_YET_ENROLLED);
+        }
+
+        enrollment.enrollmentStatus = EnrollmentStatus.UNREGISTERED;
+        await manager.save(enrollment);
     }
 }

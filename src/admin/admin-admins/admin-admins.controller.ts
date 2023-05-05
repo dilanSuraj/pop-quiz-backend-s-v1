@@ -98,12 +98,4 @@ export class AdminAdminsController {
     ): Promise<void> {
         return this.adminAdminsService.resetAdminPassword(admin.userId, adminResetPasswordDto.newPassword);
     }
-
-    @Delete(':userId')
-    @ApiOkResponse()
-    @UseGuards(AdminJwtAuthGuard)
-    @UsePipes(ClassValidationPipe)
-    removeAdmin(@Param() adminRemoveAdminDto: AdminRemoveAdminDto): Promise<void> {
-        return this.adminAdminsService.removeAdmin(adminRemoveAdminDto);
-    }
 }

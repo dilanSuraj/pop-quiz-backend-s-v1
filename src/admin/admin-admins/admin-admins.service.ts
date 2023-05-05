@@ -78,6 +78,7 @@ export class AdminAdminsService {
             const userId = generateAdminId();
 
             admin.userId = userId;
+            admin.name = adminCreateAdminDto.name;
             admin.username = adminCreateAdminDto.username;
             admin.password = await hashPassword(adminCreateAdminDto.password, salt);
             admin.salt = salt;

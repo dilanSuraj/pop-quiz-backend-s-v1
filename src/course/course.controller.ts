@@ -1,15 +1,9 @@
 import {
-    Body,
     Controller,
-    Delete,
     Get,
     Param,
-    Post,
-    Put,
     Query,
-    UploadedFile,
     UseGuards,
-    UseInterceptors,
     UsePipes,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -34,14 +28,8 @@ export class CourseController {
     })
     @UseGuards(JwtAuthGuard)
     @UsePipes(ClassValidationPipe)
-    getAvailableCourses(
-        @Query() courseFilterDto: CourseFilterDto,
-    ): Promise<GetAvailableCoursesResponseDto> {
-        return this.courseService.getAll(
-            courseFilterDto.skip,
-            courseFilterDto.take,
-            courseFilterDto.courseName
-        );
+    getAvailableCourses(@Query() courseFilterDto: CourseFilterDto): Promise<GetAvailableCoursesResponseDto> {
+        return this.courseService.getAll(courseFilterDto.skip, courseFilterDto.take, courseFilterDto.courseName);
     }
 
     @Get(':courseId')

@@ -27,11 +27,6 @@ export class EnrollmentFilterDto {
     @IsString()
     courseId?: string;
 
-    @ApiProperty()
-    @IsNotEmpty()
-    @IsString()
-    studentId: string;
-
     @ApiPropertyOptional({ enum: ['enrollmentId', 'createdDate'], enumName: 'SortKeyEnrollment' })
     @IsOptional()
     @IsEnum(['enrollmentId', 'createdDate'])

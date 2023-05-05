@@ -87,9 +87,6 @@ export class StudentService {
         const student = await manager
             .getRepository(Student)
             .createQueryBuilder('student')
-            .addSelect('student.name')
-            .addSelect('student.email')
-            .addSelect('student.status')
             .where('student.studentId = :studentId', { studentId })
             .andWhere('student.status = :status', { status: StudentStatus.ACTIVATED })
             .getOne();
@@ -97,6 +94,10 @@ export class StudentService {
         if (!student) {
             throw new UnauthorizedException();
         }
+
+        delete student.password;
+        delete student.salt;
+        delete student.joinedDate;
 
         return student;
     }
