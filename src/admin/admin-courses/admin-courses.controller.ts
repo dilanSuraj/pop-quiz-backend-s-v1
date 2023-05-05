@@ -15,110 +15,80 @@ import {
 import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiCreatedResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { AdminJwtAuthGuard } from '../admin-auth/admin-jwt-auth.guard';
 import { ClassValidationPipe } from 'src/common/pipes/class-validation.pipe';
+import { AdminGetCoursesResponseDto } from './dto/admin-get-courses-response.dto';
+import { AdminCoursesService } from './admin-courses.service';
+import { Course } from 'src/course/entity/course.entity';
+import { AdminGetCoursesDto } from './dto/admin-get-courses.dto';
+import { AdminCourseIdDto } from './dto/admin-course-id.dto';
+import { AdminCreateCourseDto } from './dto/admin-create-course.dto';
+import { AdminUpdateCourseDto } from './dto/admin-update-course.dto';
+import { GetAdminUser } from 'src/common/decorators/get-admin-user.decorator';
+import { ReqAdminInfo } from '../admin-auth/interfaces/req-admin-info.interface';
 
 @ApiTags('admin/courses')
 @ApiBearerAuth()
 @Controller('admin/courses')
 export class AdminCoursesController {
-    constructor(private adminServicesService: AdminServicesService) {}
+    constructor(private adminCoursesService: AdminCoursesService) {}
 
     @Get()
     @ApiOkResponse({
-        description: 'Services',
-        type: AdminGetServicesResponseDto,
+        description: 'Courses',
+        type: AdminGetCoursesResponseDto,
     })
     @UseGuards(AdminJwtAuthGuard)
     @UsePipes(ClassValidationPipe)
-    getServices(
-        @Query(new ValidationPipe({ transform: true })) adminGetServicesDto: AdminGetServicesDto,
-    ): Promise<AdminGetServicesResponseDto> {
-        return this.adminServicesService.getServices(
-            adminGetServicesDto.skip,
-            adminGetServicesDto.take,
-            adminGetServicesDto.ids,
-            adminGetServicesDto.ownerId,
-            adminGetServicesDto.expertId,
-            adminGetServicesDto.status,
-            adminGetServicesDto.q,
-            adminGetServicesDto.sortKey,
-            adminGetServicesDto.sortOrder,
-            adminGetServicesDto.serviceCallType,
+    getCourses(
+        @Query(new ValidationPipe({ transform: true })) adminGetCoursesDto: AdminGetCoursesDto,
+    ): Promise<AdminGetCoursesResponseDto> {
+        return this.adminCoursesService.getCourses(
+            adminGetCoursesDto.skip,
+            adminGetCoursesDto.take,
+            adminGetCoursesDto.ids,
+            adminGetCoursesDto.q,
+            adminGetCoursesDto.sortKey,
+            adminGetCoursesDto.sortOrder,
         );
     }
 
     @Post()
     @ApiCreatedResponse({
         description: 'Created Service',
-        type: Service,
+        type: Course,
     })
     @UseGuards(AdminJwtAuthGuard)
     @UsePipes(ClassValidationPipe)
-    createService(@Body() adminCreateServiceDto: AdminCreateServiceDto): Promise<Service> {
-        return this.adminServicesService.createService(adminCreateServiceDto);
+    createCourse(
+        @GetAdminUser() reqAdminInfo: ReqAdminInfo,
+        @Body() adminCreateCourseDto: AdminCreateCourseDto,
+    ): Promise<Course> {
+        return this.adminCoursesService.createCourse(reqAdminInfo.userId, adminCreateCourseDto);
     }
 
-    @Get(':serviceId')
+    @Get(':courseId')
     @ApiOkResponse({
         description: 'Service',
-        type: Service,
+        type: Course,
     })
     @UseGuards(AdminJwtAuthGuard)
     @UsePipes(ClassValidationPipe)
-    getServiceById(@Param() adminServiceIdDto: AdminServiceIdDto): Promise<Service> {
-        return this.adminServicesService.getServiceById(adminServiceIdDto.serviceId);
+    getCourseById(@Param() adminCourseIdDto: AdminCourseIdDto): Promise<Course> {
+        return this.adminCoursesService.getCourseById(adminCourseIdDto.courseId);
     }
 
-    @Put(':serviceId')
+    @Put(':courseId')
     @ApiOkResponse()
     @UseGuards(AdminJwtAuthGuard)
     @UsePipes(ClassValidationPipe)
-    updateService(
-        @Param() adminServiceIdDto: AdminServiceIdDto,
-        @Body() adminUpdateServiceDto: AdminUpdateServiceDto,
+    updateCourse(
+        @GetAdminUser() reqAdminInfo: ReqAdminInfo,
+        @Param() adminCourseIdDto: AdminCourseIdDto,
+        @Body() adminUpdateCourseDto: AdminUpdateCourseDto,
     ): Promise<void> {
-        return this.adminServicesService.updateService(adminServiceIdDto.serviceId, adminUpdateServiceDto);
-    }
-
-    @Post(':serviceId/change-request')
-    @ApiCreatedResponse()
-    @UseGuards(AdminJwtAuthGuard)
-    @UsePipes(ClassValidationPipe)
-    requestServiceChanges(
-        @Param() adminServiceIdDto: AdminServiceIdDto,
-        @Body() adminRequestChangesDto: AdminRequestChangesDto,
-    ): Promise<void> {
-        return this.adminServicesService.requestServiceChanges(
-            adminServiceIdDto.serviceId,
-            adminRequestChangesDto.rejectReason,
+        return this.adminCoursesService.updateCourse(
+            reqAdminInfo.userId,
+            adminCourseIdDto.courseId,
+            adminUpdateCourseDto,
         );
-    }
-
-    @Post('service-names')
-    @ApiCreatedResponse()
-    @UseGuards(AdminJwtAuthGuard)
-    @UsePipes(ClassValidationPipe)
-    createServiceNames(): Promise<void> {
-        return this.adminServicesService.generateServiceNames();
-    }
-
-    @Post(':serviceId/image')
-    @ApiCreatedResponse({
-        description: 'URL key which can be used to access the image',
-        type: UploadServiceImageResponseDto,
-    })
-    @ApiConsumes('multipart/form-data')
-    @ApiBody({
-        description: 'service pic',
-        type: UploadServiceImageDto,
-    })
-    @ApiBearerAuth()
-    @UseInterceptors(getFileInterceptorForField('image'))
-    @UseGuards(AdminJwtAuthGuard)
-    @UsePipes(ClassValidationPipe)
-    uploadServicePic(
-        @Param() adminUpdateServicePicDto: AdminUpdateServicePicDto,
-        @UploadedFile() file: any,
-    ): Promise<void> {
-        return this.adminServicesService.uploadServiceImage(adminUpdateServicePicDto.serviceId, file);
     }
 }

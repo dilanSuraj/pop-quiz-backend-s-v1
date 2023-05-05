@@ -1,18 +1,24 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common';
-import { Connection, IsNull } from 'typeorm';
+import { Connection, EntityManager, IsNull } from 'typeorm';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Course } from 'src/course/entity/course.entity';
 import { getModifiedTextSearchQuery } from 'src/common/helpers/search-query.helper';
 import { EnrollmentStatus } from 'src/enrollments/enrollment-status.enum';
-import { AdminGetCoursesResponseDto } from './dto/admin-get-services-response.dto';
+import { AdminGetCoursesResponseDto } from './dto/admin-get-courses-response.dto';
 import { AdminCreateCourseDto } from './dto/admin-create-course.dto';
+import { generateCourseId } from 'src/common/helpers/random-generator.helper';
+import { ResponseMessageEnums } from 'src/response-handler/response.message.enum';
+import { AdminUpdateCourseDto } from './dto/admin-update-course.dto';
+import { AdminAdminsService } from '../admin-admins/admin-admins.service';
+import { AdminEnrollmentsService } from '../admin-enrollments/admin-enrollments.service';
 
 @Injectable()
-export class AdminCoursesCourse {
+export class AdminCoursesService {
     constructor(
         private connection: Connection,
-        private coursesCourse: CourseService,
+        private adminEnrollmentsService: AdminEnrollmentsService,
+        private adminAdminsService: AdminAdminsService,
         @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     ) {}
 
@@ -86,127 +92,60 @@ export class AdminCoursesCourse {
         return course;
     }
 
-    async createCourse(adminUserId: string, adminCreateCourseDto: AdminCreateCourseDto): Promise<Course> {
-        return await this.coursesCourse.createCourse(adminUserId, adminCreateCourseDto);
+    async createCourse(adminUserId: string, adminCreateCourseDto: AdminCreateCourseDto, entityManager?: EntityManager): Promise<Course> {
+
+        const manager = entityManager || this.connection.manager;
+        const adminUser = await this.adminAdminsService.getAdminById(adminUserId, manager);
+        const newCourse = new Course();
+        newCourse.courseId = generateCourseId();
+        newCourse.courseName = adminCreateCourseDto.courseName;
+        newCourse.manageBy = adminUser;
+        newCourse.key = adminCreateCourseDto.courseKey;
+        newCourse.maxEnrollmentCapacity = adminCreateCourseDto.maxEnrollmentCapacity;
+
+        return await manager.save(newCourse);
     }
 
-    async updateCourse(courseId: string, adminUpdateCourseDto: AdminUpdateCourseDto): Promise<void> {
+    async updateCourse(adminUserId: string, courseId: string, adminUpdateCourseDto: AdminUpdateCourseDto): Promise<void> {
         let course = null;
         await this.connection.transaction(async (manager) => {
+
+            const adminUser = await this.adminAdminsService.getAdminById(adminUserId, manager);
             course = await manager.findOne(Course, courseId, {
-                relations: ['owner', 'category', 'owner.secondaryCategories', 'owner.category', 'packs'],
+                relations: ['createdBy'],
             });
 
             if (!course) {
-                throw new BadRequestException('Invalid course');
-            } else if (
-                course.status !== CourseStatus.PENDING_APPROVAL &&
-                adminUpdateCourseDto.status === CourseStatus.PENDING_APPROVAL
-            ) {
-                throw new BadRequestException('Course is already approved');
+                throw new BadRequestException(ResponseMessageEnums.INVALID_COURSE);
             }
 
-            const pendingPurchasedPacks = course.packs?.length
-                ? await this.connection.manager
-                      .getRepository(Pack)
-                      .createQueryBuilder('pack')
-                      .innerJoin('pack.purchasedPacks', 'purchasedPacks')
-                      .innerJoin('pack.course', 'course', 'course.courseId = :courseId', { courseId })
-                      .where('purchasedPacks.isPackCompleted = :isPackCompleted', { isPackCompleted: false })
-                      .andWhere('purchasedPacks.isPackExpired = :isPackExpired', { isPackExpired: false })
-                      .getMany()
-                : undefined;
-
-            if (adminUpdateCourseDto.status === CourseStatus.INACTIVE) {
-                const pendingBookings = await manager
-                    .getRepository(Booking)
-                    .createQueryBuilder('booking')
-                    .innerJoin('booking.course', 'course', 'course.courseId = :courseId', { courseId })
-                    .where('booking.status = :bookingStatus', { bookingStatus: BookingStatus.ACCEPTED })
-                    .select(['booking.bookingId'])
-                    .getOne();
-
-                if (pendingBookings || pendingPurchasedPacks?.length) {
-                    throw new BadRequestException(
-                        'Cannot set the course status as inactive when there are pending/ scheduled bookings',
-                    );
-                }
+            if (!adminUpdateCourseDto?.courseName) {
+                delete adminUpdateCourseDto.courseName;
             }
 
-            if (
-                course?.category?.key &&
-                course?.category?.key !== adminUpdateCourseDto?.categoryKey &&
-                adminUpdateCourseDto?.categoryKey
-            ) {
-                const category = await manager.findOne(Category, {
-                    key: adminUpdateCourseDto?.categoryKey,
-                });
-                if (!category) {
-                    throw new BadRequestException('The category is not valid');
-                }
-                if (
-                    !(course?.owner?.secondaryCategories || []).find(
-                        (secondaryCategory) => secondaryCategory.key === adminUpdateCourseDto?.categoryKey,
-                    ) &&
-                    course?.owner?.category?.key !== adminUpdateCourseDto?.categoryKey
-                ) {
-                    throw new BadRequestException('This is category is not in the particular owner category list');
-                }
-                course.category = category;
-                course.categoryKey = category?.key;
-                await manager.save(course);
+            if (!adminUpdateCourseDto?.key) {
+                delete adminUpdateCourseDto.key;
             }
 
-            delete adminUpdateCourseDto?.categoryKey;
-
-            if (adminUpdateCourseDto?.packs && adminUpdateCourseDto?.packs?.length) {
-                if (!course.packs) {
-                    throw new BadRequestException('Invalid packs');
+            if (adminUpdateCourseDto?.maxEnrollmentCapacity) {
+                const currentEnrollmentCount = await this.adminEnrollmentsService.getAllRegisteredEnrollmentCount(courseId, manager);
+                if (currentEnrollmentCount > adminUpdateCourseDto?.maxEnrollmentCapacity) {
+                    throw new BadRequestException(ResponseMessageEnums.MAX_ENROLLMENT_COUNT_CANNOT_BE_REDUCED);
                 }
-                const validPacks = course.packs.filter((pack) => pack.status !== PackStatus.DELETED);
-                if (adminUpdateCourseDto.packs.length !== validPacks.length) {
-                    throw new BadRequestException('Invalid number of packs');
-                }
-                const packIdsInDto = adminUpdateCourseDto.packs.map((pack) => pack.packId);
-                const packIdsInCourse = validPacks.map((pack) => pack.packId);
-                if (!packIdsInCourse.every((packId) => packIdsInDto.includes(packId))) {
-                    throw new BadRequestException('Invalid pack ids');
-                }
-
-                const purchasedPackIds = [
-                    ...new Set(pendingPurchasedPacks.map((purchasedPack) => purchasedPack.packId)),
-                ];
-
-                adminUpdateCourseDto.packs.forEach((pack) => {
-                    if (pack.status === PackStatus.INACTIVE && purchasedPackIds.includes(pack.packId)) {
-                        throw new BadRequestException(
-                            'Cannot set the pack status as inactive when there are pending/ scheduled bookings',
-                        );
-                    }
-                });
-
-                const packs = adminUpdateCourseDto.packs.map((data) => {
-                    const pack = new Pack();
-                    Object.assign(pack, data);
-                    return pack;
-                });
-                await manager.save(packs);
+            } else {
+                delete adminUpdateCourseDto.maxEnrollmentCapacity;
             }
 
-            delete adminUpdateCourseDto?.packs;
-            await manager.update(Course, { courseId }, adminUpdateCourseDto);
+            if (adminUpdateCourseDto) {
+                await manager.update(
+                    Course,
+                    { courseId },
+                    {
+                        ...adminUpdateCourseDto,
+                        manageBy: adminUser,
+                    },
+                );
+            }
         });
-
-        if (
-            course &&
-            course?.status === CourseStatus.PENDING_APPROVAL &&
-            adminUpdateCourseDto.status !== CourseStatus.PENDING_APPROVAL &&
-            course?.owner?.userId
-        ) {
-            const user = await this.connection.manager.findOne(User, course.owner.userId);
-            if (user?.email) {
-                await this.emailCourse.sendCourseApprovedEmail(user?.email, course);
-            }
-        }
     }
 }

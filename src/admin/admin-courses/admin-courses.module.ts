@@ -1,16 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AdminServicesService } from './admin-courses.service';
-import { AdminServicesController } from './admin-courses.controller';
-import { SlugGeneratorModule } from 'src/slug-generator/slug-generator.module';
-import { EmailModule } from 'src/email/email.module';
-import { SearchModule } from 'src/search/search.module';
-import { ServicesModule } from 'src/services/services.module';
-import { SlackModule } from 'src/slack/slack.module';
-import { PushNotificationsModule } from 'src/push-notifications/push-notifications.module';
+import { AdminCoursesService } from './admin-courses.service';
+import { AdminCoursesController } from './admin-courses.controller';
+import { AdminAdminsModule } from '../admin-admins/admin-admins.module';
 
 @Module({
-    providers: [AdminServicesService],
-    controllers: [AdminServicesController],
-    imports: [SlugGeneratorModule, EmailModule, SearchModule, ServicesModule, SlackModule, PushNotificationsModule],
+    providers: [AdminCoursesService],
+    controllers: [AdminCoursesController],
+    imports: [AdminAdminsModule],
 })
-export class AdminServicesModule {}
+export class AdminCoursesModule {}

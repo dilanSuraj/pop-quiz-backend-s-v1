@@ -20,7 +20,7 @@ export class Enrollment {
 
     @ApiProperty({ type: () => Student })
     @ManyToOne(() => Student, (student) => student.enrollments)
-    students: Student;
+    student: Student;
 
     @ApiProperty({ type: () => Course })
     @ManyToOne(() => Course, (course) => course.enrollments)

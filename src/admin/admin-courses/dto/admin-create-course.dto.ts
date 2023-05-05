@@ -13,4 +13,10 @@ export class AdminCreateCourseDto {
     @IsInt()
     @Min(0)
     maxEnrollmentCapacity: number;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(100)
+    courseKey: string;
 }

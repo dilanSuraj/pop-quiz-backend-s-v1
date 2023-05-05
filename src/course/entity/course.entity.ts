@@ -1,12 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Admin } from 'src/admin/admin-admins/entity/admin.entity';
 import { Enrollment } from 'src/enrollments/entity/enrollments.entity';
 
 @Entity()
 export class Course {
-    @PrimaryGeneratedColumn()
-    courseId: number;
+    @ApiProperty()
+    @PrimaryColumn()
+    courseId: string;
 
     @ApiProperty()
     @Column()
@@ -17,7 +18,7 @@ export class Course {
         () => Admin,
         admin => admin.courses,
     )
-    createdBy: Admin;
+    manageBy: Admin;
 
     @ApiProperty()
     @Column()

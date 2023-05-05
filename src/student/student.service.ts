@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { Connection } from 'typeorm';
+import { Connection, EntityManager } from 'typeorm';
 import { Logger } from 'winston';
 import { CheckExistenceResponseDto } from './dto/check-existence-response.dto';
 import moment = require('moment');
@@ -12,8 +12,10 @@ import { StudentStatus } from './entity/student.interface';
 export class StudentService {
     constructor(private connection: Connection, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {}
 
-    async create(student: Student): Promise<Student> {
-        const alreadyExists = await this.connection.manager.findOne(Student, {
+    async create(student: Student, entityManager?: EntityManager): Promise<Student> {
+        const manager = entityManager || this.connection.manager;
+
+        const alreadyExists = await manager.findOne(Student, {
             where: { email: student.email },
             select: ['studentId'],
         });
@@ -24,36 +26,46 @@ export class StudentService {
         if (alreadyExists?.status === StudentStatus.DEACTIVATED) {
             throw new BadRequestException(ResponseMessageEnums.USER_DEACTIVATED);
         }
-        await this.connection.manager.save(student);
-        return student;
+        return await manager.save(student);
     }
 
-    async findById(studentId: string): Promise<Student | undefined> {
-        return await this.connection.manager.findOne(Student, studentId);
+    async findById(studentId: string, entityManager?: EntityManager): Promise<Student | undefined> {
+        const manager = entityManager || this.connection.manager;
+
+        return await manager.findOne(Student, studentId);
     }
 
-    async findAuthDetailsById(studentId: string): Promise<Student | undefined> {
-        return await this.connection.manager
+    async findAuthDetailsById(studentId: string, entityManager?: EntityManager): Promise<Student | undefined> {
+        const manager = entityManager || this.connection.manager;
+
+        return await manager
             .getRepository(Student)
             .createQueryBuilder('student')
             .where('student.studentId = :studentId', { studentId })
             .getOne();
     }
 
-    async findOne(email: string): Promise<Student | undefined> {
-        return await this.connection.manager
+    async findOne(email: string, entityManager?: EntityManager): Promise<Student | undefined> {
+        const manager = entityManager || this.connection.manager;
+
+        return await manager
             .getRepository(Student)
             .createQueryBuilder('student')
             .andWhere('student.email = :email', { email })
             .getOne();
     }
 
-    async findByEmail(email: string): Promise<Student | undefined> {
-        return await this.connection.manager.findOne(Student, { email });
+    async findByEmail(email: string, entityManager?: EntityManager): Promise<Student | undefined> {
+        const manager = entityManager || this.connection.manager;
+
+        return await manager.findOne(Student, { email });
     }
 
-    async checkExistenceOfStudent(email: string): Promise<CheckExistenceResponseDto> {
-        const student = await this.connection.manager.findOne(Student, {
+    async checkExistenceOfStudent(email: string, entityManager?: EntityManager): Promise<CheckExistenceResponseDto> {
+
+        const manager = entityManager || this.connection.manager;
+
+        const student = await manager.findOne(Student, {
             where: { email },
         });
 
@@ -68,8 +80,11 @@ export class StudentService {
         return dto;
     }
 
-    async findBasicStudentDetails(studentId: string): Promise<Student> {
-        const student = await this.connection.manager
+    async findBasicStudentDetails(studentId: string, entityManager?: EntityManager): Promise<Student> {
+
+        const manager = entityManager || this.connection.manager;
+
+        const student = await manager
             .getRepository(Student)
             .createQueryBuilder('student')
             .addSelect('student.name')

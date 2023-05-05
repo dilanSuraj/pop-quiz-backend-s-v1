@@ -65,7 +65,7 @@ export class AuthService {
         return dto;
     }
 
-    async signUp(email: string, name: string, password?: string): Promise<LoginResponseDto> {
+    async signUp(email: string, name: string, password: string): Promise<LoginResponseDto> {
         const student = new Student();
 
         student.email = email;

@@ -1,27 +1,32 @@
 server:
     port: 3000
-    hostedDomain: 'localhost:3000'
+    hostedDomain: "localhost:3000"
 
 db:
-    type: 'mysql'
-    host: 'localhost'
+    type: "mysql"
+    host: "localhost"
     port: 3306
-    database: 'regov'
-    username: 'root'
-    password: ''
+    database: "regov"
+    username: "root"
+    password: ""
     synchronize: true
     logging: false
     connectionAlive: true
-    migrations: ['dist/migrations/*{.ts,.js}']
-    migrationsTableName: 'migrations_typeorm'
+    migrations: ["dist/migrations/*{.ts,.js}"]
+    migrationsTableName: "migrations_typeorm"
     migrationsRun: true
 
 jwt:
-    secret: 'secretKey'
+    secret: "secretKey"
 
 logger:
     logToFile: false
 
 user:
     idLength: 10
-    defaultUser: 6329592072
+
+course:
+    courseIdLength: 10
+
+enrollment:
+    idLength: 10

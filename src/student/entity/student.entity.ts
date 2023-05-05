@@ -34,7 +34,7 @@ export class Student {
     @ApiProperty()
     @OneToMany(
         () => Enrollment,
-        enrollment => enrollment.course,
+        enrollment => enrollment.student,
     )
     enrollments: Enrollment[];
 }

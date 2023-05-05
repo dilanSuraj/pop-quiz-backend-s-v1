@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { Connection } from 'typeorm';
+import { Connection, EntityManager } from 'typeorm';
 import { Logger } from 'winston';
 import { Course } from './entity/course.entity';
 import { EnrollmentStatus } from 'src/enrollments/enrollment-status.enum';
@@ -14,8 +14,11 @@ export const SERVICE_ID_LENGTH = 15;
 export class CourseService {
     constructor(private connection: Connection, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {}
 
-    async getAll(skip?: number, take?: number, courseName?: string): Promise<GetAvailableCoursesResponseDto> {
-        let coursesQuery = this.connection.manager
+    async getAll(skip?: number, take?: number, courseName?: string, entityManager?: EntityManager): Promise<GetAvailableCoursesResponseDto> {
+
+        const manager = entityManager || this.connection.manager;
+
+        let coursesQuery = manager
             .getRepository(Course)
             .createQueryBuilder('course')
             .select('course.courseId', 'courseId')
@@ -50,8 +53,11 @@ export class CourseService {
         return dto;
     }
 
-    async getCourseById(courseId: string): Promise<Course> {
-        const course = await this.connection.manager.findOne(Course, courseId);
+    async getCourseById(courseId: string, entityManager?: EntityManager): Promise<Course> {
+
+        const manager = entityManager || this.connection.manager;
+
+        const course = await manager.findOne(Course, courseId);
 
         if (!course) {
             throw new BadRequestException(ResponseMessageEnums.INVALID_COURSE);
