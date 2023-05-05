@@ -22,7 +22,7 @@ export class Admin {
     @ApiProperty()
     @OneToMany(
         () => Course,
-        course => course.createdBy,
+        course => course.manageBy,
     )
     courses: Course[];
 }

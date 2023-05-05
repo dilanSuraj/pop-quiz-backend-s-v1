@@ -7,6 +7,15 @@ import { FilterFieldsInterceptor } from './common/interceptors/filter-fields.int
 import { typeOrmConfig } from './config/typeorm.config';
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './config/winston.config';
+import { AuthModule } from './auth/auth.module';
+import { CourseModule } from './course/course.module';
+import { EnrollmentModule } from './enrollments/enrollment.module';
+import { StudentModule } from './student/student.module';
+import { AdminAdminsModule } from './admin/admin-admins/admin-admins.module';
+import { AdminAuthModule } from './admin/admin-auth/admin-auth.module';
+import { AdminCoursesModule } from './admin/admin-courses/admin-courses.module';
+import { AdminEnrollmentsModule } from './admin/admin-enrollments/admin-enrollments.module';
+import { AdminStudentsModule } from './admin/admin-students/admin-students.module';
 
 @Module({
     providers: [
@@ -26,6 +35,15 @@ import { winstonConfig } from './config/winston.config';
     imports: [
         WinstonModule.forRoot(winstonConfig),
         TypeOrmModule.forRoot(typeOrmConfig),
+        AuthModule,
+        CourseModule,
+        EnrollmentModule,
+        StudentModule,
+        AdminAdminsModule,
+        AdminAuthModule,
+        AdminCoursesModule,
+        AdminEnrollmentsModule,
+        AdminStudentsModule,
     ],
 })
 export class AppModule {}

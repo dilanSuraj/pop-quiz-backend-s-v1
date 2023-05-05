@@ -1,5 +1,9 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as config from 'config';
+import { Admin } from 'src/admin/admin-admins/entity/admin.entity';
+import { Course } from 'src/course/entity/course.entity';
+import { Enrollment } from 'src/enrollments/entity/enrollments.entity';
+import { Student } from 'src/student/entity/student.entity';
 import { Logger } from 'typeorm';
 const dbConfig = config.get<{
     type: any;
@@ -24,7 +28,12 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     username: process.env.DB_USER || dbConfig.username,
     password: process.env.DB_PASSWORD || dbConfig.password,
     database: process.env.DB_NAME || dbConfig.database,
-    entities: [],
+    entities: [
+        Student,
+        Admin,
+        Course,
+        Enrollment
+    ],
     synchronize: dbConfig.synchronize,
     logging: dbConfig.logging,
     logger: dbConfig.logger,

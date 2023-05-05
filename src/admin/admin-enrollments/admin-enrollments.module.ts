@@ -8,4 +8,4 @@ import { AdminEnrollmentsService } from './admin-enrollments.service';
     imports: [],
     exports: [AdminEnrollmentsService],
 })
-export class AdminStudentsModule {}
+export class AdminEnrollmentsModule {}
